@@ -87,35 +87,17 @@ const userSchema = new mongoose.Schema(
 userSchema.pre("save", function (next) {
   if (this.isNew) {
     this.trialStartDate = Date.now();
-    // 30 mins trial period
-    this.trialEndDate = Date.now() + 5 * 60 * 1000;
-    // this.trialEndDate = Date.now() + 3 * 24 * 60 * 60 * 1000;
+    this.trialEndDate = Date.now() + 3 * 24 * 60 * 60 * 1000;
   }
 
   next();
 });
-
-// check if the trial period has expired or not
-userSchema.methods.checkTrialPeriod = function () {
-  if (Date.now() > this.trialEndDate) {
-    this.isTrialExpired = true;
-  }
-};
 
 // storing the hashed password in the database
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
   this.password = await bcrypt.hash(this.password, 12);
-
-  next();
-});
-
-// check if the subscriptionStatus is expired or not
-userSchema.pre("save", function (next) {
-  if (Date.now() > this.subscriptionEndDate) {
-    this.subscriptionStatus = "expired";
-  }
 
   next();
 });

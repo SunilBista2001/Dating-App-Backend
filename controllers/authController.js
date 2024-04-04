@@ -41,6 +41,24 @@ export const login = async (req, res, next) => {
       return next(new AppError("Invalid credentials", 400));
     }
 
+    // Check if the user's trial period has expired
+    if (new Date() > user.trialEndDate) {
+      user.isTrialExpired = true;
+      await user.save();
+    }
+
+    // Check if the user's subscription has expired
+    if (new Date() > user.subscriptionEndDate) {
+      user.subscriptionStatus = "expired";
+      await user.save();
+    }
+
+    if (user.isTrialExpired === true && user.subscriptionStatus === "expired") {
+      return next(
+        new AppError("Your trial period or subscription has expired", 401)
+      );
+    }
+
     const token = generateToken(user._id);
 
     res.status(200).json({
@@ -85,9 +103,9 @@ export const protect = async (req, res, next) => {
       );
     }
 
-    req.user = currentUser;
-
     console.log(currentUser);
+
+    req.user = currentUser;
 
     next();
   } catch (error) {
