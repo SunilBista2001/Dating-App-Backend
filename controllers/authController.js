@@ -18,7 +18,18 @@ export const signUp = async (req, res, next) => {
       return next(new AppError("User already exists", 400));
     }
 
-    await User.create({ role: "customer", ...req.body });
+    let profilePicture;
+    if (req.body.profilePic === "") {
+      profilePicture = `https://avatar.iran.liara.run/public/${
+        req.body.gender === "male" ? "boy" : "girl"
+      }?username=${req.body.username}`;
+    }
+
+    await User.create({
+      role: "customer",
+      profilePic: profilePicture,
+      ...req.body,
+    });
 
     res.status(201).json({
       status: "success",
@@ -111,4 +122,44 @@ export const protect = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+};
+
+export const approveUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByIdAndUpdate(
+      id,
+      {
+        subscriptionEndDate: new Date() + 30 * 24 * 60 * 60 * 1000,
+        subscriptionStatus: "active",
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!user) {
+      return next(new AppError("User not found", 404));
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: "User approved successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const restrictTo = (role) => {
+  return (req, res, next) => {
+    if (req.user.role !== role) {
+      return next(
+        new AppError("You are not authorized to perform this action", 403)
+      );
+    }
+
+    next();
+  };
 };

@@ -4,8 +4,7 @@ import express from "express";
 import indexRouter from "./routes/indexRoute.js";
 import { connectToDB } from "./lib/db.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
-
-const app = express();
+import { app, server } from "./socket/socket.js";
 
 dotenv.config();
 
@@ -24,4 +23,4 @@ app.use("/api/v1", indexRouter);
 
 app.use(errorHandler);
 
-app.listen(PORT, () => console.log(`Server is running on : ${PORT}`));
+server.listen(PORT, () => console.log(`Server is running on : ${PORT}`));

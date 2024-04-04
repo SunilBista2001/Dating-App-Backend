@@ -77,6 +77,12 @@ const userSchema = new mongoose.Schema(
     subscriptionEndDate: {
       type: Date,
     },
+
+    // esewa remarks
+    remarks: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,
