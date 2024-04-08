@@ -4,8 +4,10 @@ import * as messageCtrl from "../controllers/messageController.js";
 
 const router = Router();
 
+router.get("/:id", authCtrl.protect, messageCtrl.getMessages);
+
 router.post("/:id", authCtrl.protect, messageCtrl.sendMessage);
 
-router.get("/:id", authCtrl.protect, messageCtrl.getMessages);
+router.delete("/:id", authCtrl.protect, messageCtrl.deleteConversation);
 
 export default router;

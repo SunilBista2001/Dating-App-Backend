@@ -1,3 +1,4 @@
+import AppError from "../lib/appError.js";
 import Conversation from "../models/conversationModel.js";
 import Message from "../models/messageModel.js";
 import { getReceiverSocketId, io } from "../socket/socket.js";
@@ -80,6 +81,46 @@ export const getMessages = async (req, res, next) => {
     res.status(200).json({
       status: "success",
       data: messages,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteConversation = async (req, res, next) => {
+  try {
+    const { id: receiverId } = req.params;
+
+    const senderId = req.user._id;
+
+    const isConversationExists = await Conversation.exists({
+      participants: {
+        $all: [senderId, receiverId],
+      },
+    });
+
+    console.log(isConversationExists);
+
+    if (!isConversationExists) {
+      return next(new AppError("No conversation found", 404));
+    }
+
+    await Message.deleteMany({
+      $or: [
+        {
+          senderId,
+          receiverId,
+        },
+        {
+          senderId: receiverId,
+          receiverId: senderId,
+        },
+      ],
+    });
+
+    res.status(200).json({
+      status: "success",
+      message: "Conversation deleted successfully",
     });
   } catch (error) {
     next(error);

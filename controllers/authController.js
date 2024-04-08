@@ -109,12 +109,11 @@ export const protect = async (req, res, next) => {
       currentUser.isTrialExpired === true &&
       currentUser.subscriptionStatus === "expired"
     ) {
+      // req.user = currentUser;
       return next(
         new AppError("Your trial period or subscription has expired", 401)
       );
     }
-
-    console.log(currentUser);
 
     req.user = currentUser;
 
@@ -162,4 +161,9 @@ export const restrictTo = (role) => {
 
     next();
   };
+};
+
+export const me = (req, res, next) => {
+  req.params.id = req.user._id;
+  next();
 };

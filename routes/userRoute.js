@@ -8,4 +8,10 @@ router.get("/male", protect, userCtrl.getMaleUsers);
 
 router.get("/female", protect, userCtrl.getFemaleUsers);
 
+router.get("/all", protect, userCtrl.getAllUsers);
+
+router.get("/sidebar-users", protect, userCtrl.getSidebarUsers);
+
+router.put("/:userId/like", protect, userCtrl.likeUser);
+
 export default router;

@@ -29,9 +29,12 @@ const userSchema = new mongoose.Schema(
       type: String,
     },
 
-    likes: {
-      type: Number,
-    },
+    likes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
 
     gender: {
       type: String,
@@ -76,6 +79,11 @@ const userSchema = new mongoose.Schema(
     },
     subscriptionEndDate: {
       type: Date,
+    },
+
+    isVerified: {
+      type: Boolean,
+      default: false,
     },
 
     // esewa remarks
