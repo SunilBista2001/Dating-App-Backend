@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema(
       minLength: 5,
     },
 
-    profilePic: {
+    avatar: {
       type: String,
       default: "",
     },
@@ -53,7 +53,7 @@ const userSchema = new mongoose.Schema(
     },
 
     age: {
-      type: Number,
+      type: String,
     },
 
     trialStartDate: {
@@ -90,6 +90,11 @@ const userSchema = new mongoose.Schema(
     remarks: {
       type: String,
       default: "",
+    },
+
+    agreementToTerms: {
+      type: Boolean,
+      required: true,
     },
   },
   {

@@ -30,7 +30,7 @@ export const sendMessage = async (req, res, next) => {
     });
 
     if (newMessage) {
-      conversation.messages.push(newMessage._id);
+      conversation.messages.push(newMessage?._id);
     }
 
     await Promise.all([newMessage.save(), conversation.save()]);
@@ -41,6 +41,8 @@ export const sendMessage = async (req, res, next) => {
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", newMessage);
     }
+
+    console.log("receiverSocketId", receiverSocketId);
 
     res.status(201).json({
       status: "success",
@@ -99,8 +101,6 @@ export const deleteConversation = async (req, res, next) => {
       },
     });
 
-    console.log(isConversationExists);
-
     if (!isConversationExists) {
       return next(new AppError("No conversation found", 404));
     }
@@ -121,6 +121,48 @@ export const deleteConversation = async (req, res, next) => {
     res.status(200).json({
       status: "success",
       message: "Conversation deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const markAsSeen = async (req, res, next) => {
+  try {
+    const { id: receiverId } = req?.params;
+
+    const authUserId = req?.user?._id?.toString();
+
+    const conversation = await Conversation.findOne({
+      participants: {
+        $all: [authUserId, receiverId],
+      },
+    })
+      .sort({
+        timestamps: -1,
+      })
+      .populate("messages");
+
+    const messages = conversation?.messages;
+
+    const messageSenderId =
+      messages[messages?.length - 1]?.senderId?.toString();
+
+    // if the last message sender is not the authenticated user
+    if (messageSenderId !== authUserId) {
+      messages.forEach(async (message) => {
+        await Message.findByIdAndUpdate(message, {
+          opened: true,
+        });
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      message:
+        authUserId === messageSenderId
+          ? "You are the sender"
+          : "Messages marked as seen successfully",
     });
   } catch (error) {
     next(error);

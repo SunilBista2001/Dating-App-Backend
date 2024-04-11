@@ -10,4 +10,6 @@ router.post("/:id", authCtrl.protect, messageCtrl.sendMessage);
 
 router.delete("/:id", authCtrl.protect, messageCtrl.deleteConversation);
 
+router.put("/:id/seen", authCtrl.protect, messageCtrl.markAsSeen);
+
 export default router;

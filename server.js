@@ -6,6 +6,7 @@ import { connectToDB } from "./lib/db.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { app, server } from "./socket/socket.js";
 import cors from "cors";
+import bodyParser from "body-parser";
 
 dotenv.config();
 
@@ -13,6 +14,8 @@ const PORT = process.env.PORT || 5000;
 
 // log the request
 app.use(morgan("dev"));
+
+app.use(bodyParser.json({ limit: "10mb" }));
 
 app.use(express.json());
 

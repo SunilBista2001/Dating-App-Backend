@@ -3,31 +3,42 @@ import AppError from "../lib/appError.js";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../lib/utils.js";
 import jwt from "jsonwebtoken";
+import cloudinary from "../lib/cloudinary.js";
 
 export const signUp = async (req, res, next) => {
   try {
-    const { email, password, confirm_password } = req.body;
+    const { username, email, password, confirm_password, profilePic } =
+      req.body;
+
+    let profilePicUrl;
+
+    profilePicUrl = await cloudinary.uploader.upload(profilePic, {
+      folder: "profile_pics",
+      transformation: {
+        width: 150,
+        height: 150,
+      },
+    });
+
+    const url = profilePicUrl?.secure_url;
+
+    console.log(url);
 
     if (password !== confirm_password) {
       return next(new AppError("Passwords do not match", 400));
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({
+      $or: [{ username }, { email }],
+    });
 
     if (user) {
       return next(new AppError("User already exists", 400));
     }
 
-    let profilePicture;
-    if (req.body.profilePic === "") {
-      profilePicture = `https://avatar.iran.liara.run/public/${
-        req.body.gender === "male" ? "boy" : "girl"
-      }?username=${req.body.username}`;
-    }
-
     await User.create({
       role: "customer",
-      profilePic: profilePicture,
+      avatar: url,
       ...req.body,
     });
 
@@ -46,7 +57,7 @@ export const login = async (req, res, next) => {
 
     const user = await User.findOne({ username }).select("+password");
 
-    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    const isPasswordCorrect = await bcrypt.compare(password, user?.password);
 
     if (!user || !isPasswordCorrect) {
       return next(new AppError("Invalid credentials", 400));
@@ -70,12 +81,12 @@ export const login = async (req, res, next) => {
       );
     }
 
-    const token = generateToken(user._id);
+    const token = generateToken(user?._id);
 
     res.status(200).json({
       status: "success",
-      token,
       data: user,
+      token,
     });
   } catch (error) {
     next(error);

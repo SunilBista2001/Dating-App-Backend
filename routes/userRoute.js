@@ -12,6 +12,8 @@ router.get("/all", protect, userCtrl.getAllUsers);
 
 router.get("/sidebar-users", protect, userCtrl.getSidebarUsers);
 
+router.get("/:id", protect, userCtrl.getUser);
+
 router.put("/:userId/like", protect, userCtrl.likeUser);
 
 export default router;

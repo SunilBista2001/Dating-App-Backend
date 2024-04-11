@@ -1,5 +1,7 @@
+import AppError from "../lib/appError.js";
 import Message from "../models/messageModel.js";
 import User from "../models/userModel.js";
+import Conversation from "../models/conversationModel.js";
 
 export const getMaleUsers = async (req, res, next) => {
   try {
@@ -7,7 +9,7 @@ export const getMaleUsers = async (req, res, next) => {
       gender: "male",
       _id: { $ne: req.user._id },
     })
-      .select("username email age profilePic gender")
+      .select("username email age avatar gender")
       .sort({ createdAt: -1 })
       .exec();
 
@@ -26,7 +28,7 @@ export const getFemaleUsers = async (req, res, next) => {
       gender: "female",
       _id: { $ne: req.user._id },
     })
-      .select("username email age profilePic gender")
+      .select("username email age avatar gender")
       .sort({ createdAt: -1 })
       .exec();
 
@@ -48,7 +50,9 @@ export const expiredUsers = async (req, res, next) => {
           isTrialExpired: true,
         },
       ],
-    }).select("username age subscriptionStartDate subscriptionEndDate remarks");
+    }).select(
+      "username age avatar subscriptionStartDate subscriptionEndDate remarks isVerified"
+    );
 
     res.status(200).json({
       status: "success",
@@ -62,7 +66,7 @@ export const expiredUsers = async (req, res, next) => {
 export const getAllUsers = async (req, res, next) => {
   try {
     const users = await User.find({ _id: { $ne: req.user._id } })
-      .select("username email age profilePic gender")
+      .select("username email age avatar gender likes createdAt isVerified")
       .sort({ createdAt: -1 })
       .exec();
 
@@ -78,7 +82,9 @@ export const getAllUsers = async (req, res, next) => {
 export const getUser = async (req, res, next) => {
   try {
     const users = await User.findById(req.params.id)
-      .select("username email age profilePic gender likes")
+      .select(
+        "username email age avatar gender likes location bio createdAt isVerified"
+      )
       .exec();
 
     res.status(200).json({
@@ -90,14 +96,60 @@ export const getUser = async (req, res, next) => {
   }
 };
 
+export const isProfileComplete = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .select("username email age avatar location bio createdAt")
+      .exec();
+
+    if (!user) {
+      return next(new AppError("User not found", 404));
+    }
+
+    const { age, location, bio } = user;
+
+    if (!age || !location || !bio) {
+      return next(new AppError("Profile is incomplete", 400));
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: "Profile is complete",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getSidebarUsers = async (req, res, next) => {
   try {
     const allUsers = await User.find({ _id: { $ne: req.user._id } })
-      .select("username profilePic gender age createdAt")
+      .select("username avatar gender age likes createdAt isVerified")
       .exec();
 
-    const allUserInfo = await Promise.all(
+    const userWithConversation = await Promise.all(
       allUsers?.map(async (user) => {
+        const conversation = await Conversation.findOne({
+          participants: { $all: [req.user._id, user._id] },
+        });
+
+        // Only return the user if a conversation exists
+        if (conversation) {
+          return user;
+        }
+
+        // Return null for users without conversation
+        return null;
+      })
+    );
+
+    // Filter out null values (users without conversation)
+    const usersWithNonNullConversation = userWithConversation.filter(
+      (user) => user !== null
+    );
+
+    const allUserInfo = await Promise.all(
+      usersWithNonNullConversation?.map(async (user) => {
         const lastMessage = await Message.findOne({
           $or: [
             {
@@ -111,18 +163,15 @@ export const getSidebarUsers = async (req, res, next) => {
           ],
         })
           .sort({ createdAt: -1 })
-          .select("-updatedAt")
           .exec();
 
         return {
           user,
-          lastMessage: lastMessage
-            ? {
-                ...lastMessage.toJSON(),
-                senderId: lastMessage.senderId,
-                receiverId: lastMessage.receiverId,
-              }
-            : null,
+          lastMessage: lastMessage && {
+            ...lastMessage.toJSON(),
+            senderId: lastMessage.senderId,
+            receiverId: lastMessage.receiverId,
+          },
         };
       })
     );
@@ -143,10 +192,6 @@ export const likeUser = async (req, res, next) => {
 
     const user = await User.findById(userId).select("likes").exec();
 
-    user.likes.map((id) => console.log("like gareko id =>", id.toString()));
-
-    console.log("my id=>", authUserId);
-
     const index = user.likes.findIndex((id) => id.toString() === authUserId);
 
     if (index === -1) {
@@ -165,5 +210,49 @@ export const likeUser = async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+};
+
+export const updateMe = async (req, res, next) => {
+  try {
+    const user = await User.findByIdAndUpdate(req.user._id, req.body, {
+      new: true,
+      runValidators: true,
+    }).exec();
+
+    if (!user) {
+      return next(new AppError("User not found", 404));
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: "User updated successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+export const searchUsers = async (req, res, next) => {
+  try {
+    const { username } = req.params;
+
+    // Find users whose username contains the search term
+    const users = await User.find({
+      username,
+    })
+      .select("username avatar gender age likes createdAt isVerified")
+      .exec();
+
+    if (!users) {
+      return next(new AppError("User not found", 404));
+    }
+
+    // Respond with the found users
+    res.status(200).json({
+      status: "success",
+      data: users,
+    });
+  } catch (error) {
+    next(error); // Pass any caught error to the error-handling middleware
   }
 };
