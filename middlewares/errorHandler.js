@@ -1,4 +1,11 @@
 const sendErrToDev = (err, res) => {
+  if (err?.errorResponse?.code === 11000) {
+    return res?.status(400).json({
+      status: "fail",
+      message: `${Object.keys(err?.errorResponse?.keyValue)} already exists`,
+    });
+  }
+
   res?.status(err?.statusCode).json({
     status: err?.status,
     error: err,
@@ -13,8 +20,13 @@ const sendErrToProd = (err, res) => {
       status: err.status,
       message: err.message,
     });
+  } else if (err?.errorResponse?.code === 11000) {
+    return res?.status(400).json({
+      status: "fail",
+      message: `${Object.keys(err?.errorResponse?.keyValue)} already exists`,
+    });
   } else {
-    res?.status(500).json({
+    return res?.status(500).json({
       status: "error",
       message: "Something went wrong!",
     });

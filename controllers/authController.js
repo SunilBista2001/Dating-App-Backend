@@ -29,7 +29,7 @@ export const signUp = async (req, res, next) => {
     }
 
     const user = await User.findOne({
-      $or: [{ username }, { email }],
+      $or: [{ email }],
     });
 
     if (user) {

@@ -1,11 +1,10 @@
 import { Router } from "express";
 import * as authCtrl from "../controllers/authController.js";
 import * as userCtrl from "../controllers/userController.js";
-import upload from "../middlewares/upload.js";
 
 const router = Router();
 
-router.post("/sign-up", upload.single("profilePic"), authCtrl.signUp);
+router.post("/sign-up", authCtrl.signUp);
 
 router.post("/sign-in", authCtrl.login);
 
@@ -19,5 +18,7 @@ router.get(
 );
 
 router.put("/update-me", authCtrl.protect, userCtrl.updateMe);
+
+router.put("/update-avatar", authCtrl.protect, userCtrl.updateProfilePicture);
 
 export default router;

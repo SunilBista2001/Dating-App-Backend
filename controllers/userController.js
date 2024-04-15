@@ -2,6 +2,7 @@ import AppError from "../lib/appError.js";
 import Message from "../models/messageModel.js";
 import User from "../models/userModel.js";
 import Conversation from "../models/conversationModel.js";
+import cloudinary from "../lib/cloudinary.js";
 
 export const getMaleUsers = async (req, res, next) => {
   try {
@@ -215,7 +216,7 @@ export const likeUser = async (req, res, next) => {
 
 export const updateMe = async (req, res, next) => {
   try {
-    const user = await User.findByIdAndUpdate(req.user._id, req.body, {
+    const user = await User.findByIdAndUpdate(req?.user?._id, req.body, {
       new: true,
       runValidators: true,
     }).exec();
@@ -232,6 +233,38 @@ export const updateMe = async (req, res, next) => {
     next(error);
   }
 };
+
+export const updateProfilePicture = async (req, res, next) => {
+  try {
+    const { profilePic } = req.body;
+
+    let profilePicUrl;
+
+    profilePicUrl = await cloudinary.uploader.upload(profilePic, {
+      folder: "updated_profile_pics",
+      transformation: {
+        width: 150,
+        height: 150,
+      },
+    });
+
+    const url = profilePicUrl?.secure_url;
+
+    await User.findByIdAndUpdate(
+      req?.user?._id,
+      {
+        avatar: url,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    ).exec();
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const searchUsers = async (req, res, next) => {
   try {
     const { username } = req.params;
