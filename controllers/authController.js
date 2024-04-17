@@ -14,22 +14,27 @@ export const signUp = async (req, res, next) => {
 
     profilePicUrl = await cloudinary.uploader.upload(profilePic, {
       folder: "profile_pics",
-      transformation: {
-        width: 150,
-        height: 150,
-      },
+      transformation: [
+        {
+          width: 300,
+          height: 350,
+          quality: "auto",
+        },
+        {
+          fetch_format: "auto",
+          dpr: "auto",
+        },
+      ],
     });
 
     const url = profilePicUrl?.secure_url;
-
-    console.log(url);
 
     if (password !== confirm_password) {
       return next(new AppError("Passwords do not match", 400));
     }
 
     const user = await User.findOne({
-      $or: [{ email }],
+      $or: [{ email }, { username }],
     });
 
     if (user) {

@@ -241,25 +241,35 @@ export const updateProfilePicture = async (req, res, next) => {
     let profilePicUrl;
 
     profilePicUrl = await cloudinary.uploader.upload(profilePic, {
-      folder: "updated_profile_pics",
-      transformation: {
-        width: 150,
-        height: 150,
-      },
+      folder: "profile_pics",
+      transformation: [
+        {
+          width: 300,
+          height: 350,
+          quality: "auto",
+        },
+        {
+          fetch_format: "auto",
+          dpr: "auto",
+        },
+      ],
     });
 
     const url = profilePicUrl?.secure_url;
 
     await User.findByIdAndUpdate(
-      req?.user?._id,
-      {
-        avatar: url,
-      },
+      req.user._id,
+      { avatar: url },
       {
         new: true,
         runValidators: true,
       }
     ).exec();
+
+    res.status(200).json({
+      status: "success",
+      message: "Profile picture updated successfully",
+    });
   } catch (error) {
     next(error);
   }
