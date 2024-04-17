@@ -19,7 +19,11 @@ app.use(bodyParser.json({ limit: "10mb" }));
 
 app.use(express.json());
 
-const whitelist = ["http://localhost:5173", "http://localhost:3000"];
+const whitelist = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://192.168.1.66:3000/",
+];
 
 const corsOptions = {
   origin: function (origin, callback) {
