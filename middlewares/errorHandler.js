@@ -6,11 +6,14 @@ const sendErrToDev = (err, res) => {
     });
   }
 
-  res?.status(err?.statusCode).json({
-    status: err?.status,
-    error: err,
-    message: err?.message,
-    stack: err?.stack,
+  // Ensure a valid HTTP status code is provided, default to 500 if undefined
+  const statusCode = err?.statusCode || 500;
+
+  // Set the appropriate HTTP status code and send JSON response
+  res.status(statusCode).json({
+    status: err?.status || "error",
+    message: err?.message || "Internal Server Error",
+    stack: err?.stack, // Include stack trace if available
   });
 };
 
