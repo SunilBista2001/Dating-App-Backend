@@ -24,13 +24,21 @@ const whitelist = [
   "https://661fc1492b5122321b6c4f08--superlative-rugelach-3c684f.netlify.app/",
 ];
 
+// const corsOptions = {
+//   origin: function (origin, callback) {
+//     if (!origin || whitelist.indexOf(origin) !== -1) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error("Not allowed by CORS"));
+//     }
+//   },
+//   credentials: true,
+// };
+
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin || whitelist.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
+    // Allow requests from any origin
+    callback(null, true);
   },
   credentials: true,
 };
