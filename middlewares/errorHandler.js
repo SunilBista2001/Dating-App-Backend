@@ -15,10 +15,10 @@ const sendErrToDev = (err, res) => {
 };
 
 const sendErrToProd = (err, res) => {
-  if (err.isOperational) {
+  if (err?.isOperational) {
     res?.status(err.statusCode).json({
-      status: err.status,
-      message: err.message,
+      status: err?.status,
+      message: err?.message,
     });
   } else if (err?.errorResponse?.code === 11000) {
     return res?.status(400).json({
