@@ -20,9 +20,8 @@ app.use(bodyParser.json({ limit: "10mb" }));
 app.use(express.json());
 
 const whitelist = [
-  "http://localhost:5173",
   "http://localhost:3000",
-  "http://192.168.1.66:3000/",
+  "https://661fc1492b5122321b6c4f08--superlative-rugelach-3c684f.netlify.app/",
 ];
 
 const corsOptions = {
