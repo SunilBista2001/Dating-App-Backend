@@ -19,7 +19,7 @@ const sendErrToDev = (err, res) => {
 
 const sendErrToProd = (err, res) => {
   if (err?.isOperational) {
-    res?.status(err.statusCode).json({
+    res?.status(err?.statusCode).json({
       status: err?.status,
       message: err?.message,
     });
@@ -43,7 +43,7 @@ export const errorHandler = (err, req, res, next) => {
   }
 
   if (process.env.NODE_ENV === "production") {
-    let err = { ...err };
+    // let err = { ...err };
     sendErrToProd(err, res);
   }
 };
