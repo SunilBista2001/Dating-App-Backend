@@ -65,7 +65,7 @@ export const login = async (req, res, next) => {
     }).select("+password");
     console.log("user =>", user);
 
-    if (user === null || !(await bcrypt.compare(password, user.password))) {
+    if (!user || !(await bcrypt.compare(password, user.password))) {
       return next(new AppError("Invalid credentials", 400));
     }
 
